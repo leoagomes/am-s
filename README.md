@@ -1,6 +1,6 @@
 # am->s
 
-Originally intended as a Apple Music -> Spotify music exporter. Still unfinished.
+Originally intended as an Apple Music -> Spotify music exporter. Still unfinished.
 
 ## License
 

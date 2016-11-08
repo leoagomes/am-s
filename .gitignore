@@ -1,0 +1,10 @@
+# DrRacket autosave files
+*~
+\#*
+.\#*
+
+# macOS directory information
+.DS_Store
+
+# compiled racket code
+compiled

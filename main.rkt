@@ -45,8 +45,8 @@
 
 ; the "Add to Spotify Library" button
 ; the callback
-(define (atl-button-callback button event)
-  (add-to-spotify track-list))
+(define (atl-button-callback button event) (void))
+ ; (add-to-spotify track-list))
 
 (define atl-button (new button%
                         [label "Add to Library"]
@@ -59,7 +59,7 @@
                                               (spotify-refresh-token)
                                               (send refresh-timer
                                                     start
-                                                    (* (dict-ref spotify-auth-data 'expires_in) 1000)))]
+                                                    (* (dict-ref spotify-auth-data 'expires_in 3600) 1000)))]
                            [interval #f]))
 
 ; the itunes track list

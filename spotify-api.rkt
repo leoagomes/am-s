@@ -9,13 +9,26 @@
 
 (define spotify-host "api.spotify.com")
 
-(define (handle-status status)
+(define (parse-retry headers)
+  (for/first ([header headers]
+              #:when (string-contains? (bytes->string/utf-8 header)
+                                       "Retry-After"))
+    (string->number (cadr (bytes->string/utf-8 header)))))
+
+(define retry-after 0)
+
+(define (handle-status status headers data)
   (let ([status-code (string->number (substring (bytes->string/utf-8 status) 9 12))])
     (cond
       [(= status-code 401)
        'unauthorized]
       [(= status-code 429)
-       'too_many_requests])))
+       (set! retry-after (parse-retry headers))
+       'too_many_requests]
+      [(>= status-code 500)
+       'server_error]
+      [else
+       data])))
 
 (define (request-GET uri)
   (define-values (status headers in)
@@ -30,7 +43,7 @@
                                    "Accept: application/json")))
   (define data (read-json in))
   (close-input-port in)
-  data)
+  (handle-status status headers data))
 
 (define (request-POST uri arguments)
   (define-values (status headers in)
@@ -45,7 +58,7 @@
                                    "Accept: application/json")))
   (define data (read-json in))
   (close-input-port in)
-  data)
+  (handle-status status headers data))
 
 (define (request-DELETE uri)
   (define-values (status headers in)
@@ -59,7 +72,7 @@
                                    "Accept: application/json")))
   (define data (read-json in))
   (close-input-port in)
-  data)
+  (handle-status status headers data))
 
 (define (request-PUT uri)
   (define-values (status headers in)
@@ -71,10 +84,9 @@
                                                   spotify-token-type
                                                   " " spotify-access-token)
                                    "Accept: application/json")))
-  (if 
   (define data (read-json in))
   (close-input-port in)
-  data)
+  (handle-status status headers data))
 
 (define (id-list->string id-list)
   (if (= (length id-list) 1)
@@ -122,7 +134,7 @@
   (request-GET (string-append "/v1/me/albums/contains?ids=" (id-list->string id-list))))
 
 (define (search-album name artist)
-  (define query-string (string-append "album:\"" name "\" artist:\"" artist "\""))
+  (define query-string (string-append "album:" name " artist:" artist ""))
   (request-GET (string-append "/v1/search?market=from_token&type=album&q=" (uri-encode query-string))))
 
 (define (search-track name album artist)
